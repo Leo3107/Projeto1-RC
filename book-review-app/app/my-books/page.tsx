@@ -9,7 +9,7 @@ import BookGrid from "@/components/book/BookGrid";
 import ProfileCard from "@/components/ui/ProfileCard";
 import { Shelf } from "@/lib/types";
 import { saveUsers } from "@/lib/utils/localStorage";
-import { Badge } from "@/components/ui/Badge";
+import Badge from "@/components/ui/Badge";
 
 export default function MyBooksPage() {
   const router = useRouter();

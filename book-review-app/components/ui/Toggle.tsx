@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Switch } from "@headlessui/react";
+import { useUIStore } from "@/lib/store/uiStore";
 
 interface ToggleProps {
   isEnabled: boolean;
@@ -60,27 +61,12 @@ export default function Toggle({
 }
 
 export function DarkModeToggle() {
-  const [isDarkMode, setIsDarkMode] = useState(
-    typeof window !== "undefined" &&
-      document.documentElement.classList.contains("dark")
-  );
-
-  const toggleDarkMode = (enabled: boolean) => {
-    setIsDarkMode(enabled);
-
-    if (enabled) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("darkMode", "true");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("darkMode", "false");
-    }
-  };
+  const { isDarkMode, toggleDarkMode } = useUIStore();
 
   return (
     <Toggle
       isEnabled={isDarkMode}
-      onChange={toggleDarkMode}
+      onChange={() => toggleDarkMode()}
       label="Dark Mode"
       className="ml-auto"
     />

@@ -1,13 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
+import { useUIStore } from "@/lib/store/uiStore";
 import { DarkModeToggle } from "../ui/Toggle";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { activeUser } = useUserStore();
+  const { isDarkMode } = useUIStore();
+
+  useEffect(() => {
+    // Apply dark mode class based on the store state
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">

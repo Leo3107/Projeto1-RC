@@ -25,11 +25,15 @@ export const useUIStore = create<UIState>((set) => ({
 export const initializeUIStore = () => {
   if (typeof window !== "undefined") {
     const savedDarkMode = localStorage.getItem("darkMode") === "true";
-    useUIStore.getState().isDarkMode = savedDarkMode;
+
+    // Use set to update the store state
+    useUIStore.setState({ isDarkMode: savedDarkMode });
 
     // Apply dark mode class to document if needed
     if (savedDarkMode) {
       document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
   }
 };

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css"; // Local CSS file
 import { StoreInitializer } from "@/components/ui/StoreInitializer";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +27,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <Script id="dark-mode-script" strategy="beforeInteractive">
+          {`
+            (function() {
+              // Check if dark mode is stored in localStorage
+              const darkModeStored = localStorage.getItem('darkMode');
+              
+              if (darkModeStored === 'true') {
+                document.documentElement.classList.add('dark');
+              } else if (darkModeStored === null) {
+                // If no preference is stored, check system preference
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (prefersDark) {
+                  document.documentElement.classList.add('dark');
+                }
+              }
+            })()
+          `}
+        </Script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
       >

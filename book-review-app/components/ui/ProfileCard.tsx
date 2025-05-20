@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import { User } from "@/lib/types";
-import { Badge } from "@/components/ui/Badge";
-import { TextField } from "@/components/ui/TextField";
-import { Button } from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
+import TextField from "@/components/ui/TextField";
+import Button from "@/components/ui/Button";
 
 interface ProfileCardProps {
   user: User;
