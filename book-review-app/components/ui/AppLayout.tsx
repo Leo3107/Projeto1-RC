@@ -1,24 +1,15 @@
-import React, { useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
-import { useUIStore } from "@/lib/store/uiStore";
 import { DarkModeToggle } from "../ui/Toggle";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { activeUser } = useUserStore();
-  const { isDarkMode } = useUIStore();
 
-  useEffect(() => {
-    // Apply dark mode class based on the store state
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDarkMode]);  return (
+  return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
       <header className="sticky top-0 z-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-md border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -35,7 +26,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c.966 0 1.89.166 2.75.47a.75.75 0 001-.708V4.262a.75.75 0 00-.5-.707A9.735 9.735 0 0018 3a9.707 9.707 0 00-5.25 1.533v16.103z" />
               </svg>
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-500">BookShelf</span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-500">
+                BookShelf
+              </span>
             </Link>
           </div>
 
@@ -55,7 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 href="/my-books"
                 className={`hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-md transition-all duration-200 ${
                   pathname === "/my-books"
-                    ? "text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/30 shadow-sm" 
+                    ? "text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/30 shadow-sm"
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/30"
                 }`}
               >
@@ -103,8 +96,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </div>
-      </header>      <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
-
+      </header>
+      <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
       <footer className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 py-8 shadow-md">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">

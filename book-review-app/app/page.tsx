@@ -1,23 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Book } from "@/lib/types";
 import { useUserStore } from "@/lib/store/userStore";
 import { useBookSearchStore } from "@/lib/store/bookSearchStore";
-import { useUIStore } from "@/lib/store/uiStore";
 import AppLayout from "@/components/ui/AppLayout";
 import SearchBar from "@/components/book/SearchBar";
 import BookGrid from "@/components/book/BookGrid";
-import Modal from "@/components/ui/Modal";
-import BookDetail from "@/components/book/BookDetail";
+import BookDetailModal, {
+  useBookModal,
+} from "@/components/book/BookDetailModal";
 
 export default function Home() {
   const router = useRouter();
   const { activeUser } = useUserStore();
   const { books, isLoading, searchBooksAsync } = useBookSearchStore();
-  const { selectedBook, isBookModalOpen, openBookModal, closeBookModal } =
-    useUIStore();
+  const { openBookModal } = useBookModal();
 
   // If no active user, redirect to user selection page
   useEffect(() => {
@@ -48,28 +47,19 @@ export default function Home() {
             Search for books to add to your shelves and leave reviews.
           </p>
         </div>
-
         <div className="mb-6">
           <SearchBar onSearch={handleSearch} />
         </div>
-
         <BookGrid
           books={books}
           onBookClick={handleBookClick}
           isLoading={isLoading}
           emptyMessage="Search for books to get started"
-        />
+        />{" "}
       </div>
 
-      {/* Book Detail Modal */}
-      <Modal
-        isOpen={isBookModalOpen}
-        onClose={closeBookModal}
-        title="Book Details"
-        size="xl"
-      >
-        {selectedBook && <BookDetail book={selectedBook} />}
-      </Modal>
+      {/* Include the modularized book detail modal */}
+      <BookDetailModal />
     </AppLayout>
   );
 }

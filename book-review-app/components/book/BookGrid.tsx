@@ -7,7 +7,7 @@ import { useUserStore } from "@/lib/store/userStore";
 
 interface BookGridProps {
   books: Book[];
-  onBookClick: (book: Book) => void;
+  onBookClick?: (book: Book) => void;
   isLoading?: boolean;
   emptyMessage?: string;
 }
@@ -50,7 +50,6 @@ export default function BookGrid({
       </div>
     );
   }
-
   // Otherwise, render the book grid
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -58,7 +57,7 @@ export default function BookGrid({
         <div key={book.id} className="h-full">
           <BookCard
             book={book}
-            onClick={() => onBookClick(book)}
+            onClick={onBookClick ? () => onBookClick(book) : undefined}
             onAddToShelf={(shelf) => handleAddToShelf(book, shelf)}
           />
         </div>

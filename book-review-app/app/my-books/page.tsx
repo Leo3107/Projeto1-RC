@@ -7,9 +7,12 @@ import { useBookShelfStore } from "@/lib/store/bookShelfStore";
 import AppLayout from "@/components/ui/AppLayout";
 import BookGrid from "@/components/book/BookGrid";
 import ProfileCard from "@/components/ui/ProfileCard";
-import { Shelf } from "@/lib/types";
+import { Book, Shelf } from "@/lib/types";
 import { saveUsers } from "@/lib/utils/localStorage";
 import Badge from "@/components/ui/Badge";
+import BookDetailModal, {
+  useBookModal,
+} from "@/components/book/BookDetailModal";
 
 export default function MyBooksPage() {
   const router = useRouter();
@@ -21,6 +24,7 @@ export default function MyBooksPage() {
     setActiveShelf,
     loadUserShelves,
   } = useBookShelfStore();
+  const { openBookModal } = useBookModal();
 
   useEffect(() => {
     if (!activeUser) {
@@ -31,16 +35,14 @@ export default function MyBooksPage() {
     // Load books for user's shelves
     loadUserShelves(activeUser.id);
   }, [activeUser, router, loadUserShelves]);
-
   if (!activeUser) {
     return null; // Router will redirect
   }
 
-  const shelfCounts = {
-    read: activeUser.shelves.read.length,
-    currentlyReading: activeUser.shelves.currentlyReading.length,
-    wantToRead: activeUser.shelves.wantToRead.length,
+  const handleBookClick = (book: Book) => {
+    openBookModal(book);
   };
+
   return (
     <AppLayout>
       <div className="mb-8">
@@ -77,7 +79,7 @@ export default function MyBooksPage() {
             } px-4 py-2 rounded-full font-medium transition-colors`}
           >
             Read
-            <Badge className="ml-2">{shelfCounts.read}</Badge>
+            <Badge className="ml-2">{activeUser.shelves.read.length}</Badge>
           </button>
           <button
             onClick={() => setActiveShelf("currentlyReading")}
@@ -88,7 +90,9 @@ export default function MyBooksPage() {
             } px-4 py-2 rounded-full font-medium transition-colors`}
           >
             Currently Reading
-            <Badge className="ml-2">{shelfCounts.currentlyReading}</Badge>
+            <Badge className="ml-2">
+              {activeUser.shelves.currentlyReading.length}
+            </Badge>
           </button>
 
           <button
@@ -100,7 +104,9 @@ export default function MyBooksPage() {
             } px-4 py-2 rounded-full font-medium transition-colors`}
           >
             Want to Read
-            <Badge className="ml-2">{shelfCounts.wantToRead}</Badge>
+            <Badge className="ml-2">
+              {activeUser.shelves.wantToRead.length}
+            </Badge>
           </button>
         </div>
 
@@ -160,12 +166,18 @@ export default function MyBooksPage() {
               >
                 Search for books
               </button>
-            </div>
+            </div>{" "}
           </div>
         ) : (
-          <BookGrid books={shelfBooks[activeShelf]} />
+          <BookGrid
+            books={shelfBooks[activeShelf]}
+            onBookClick={handleBookClick}
+          />
         )}
       </div>
+
+      {/* Include the book detail modal */}
+      <BookDetailModal />
     </AppLayout>
   );
 }

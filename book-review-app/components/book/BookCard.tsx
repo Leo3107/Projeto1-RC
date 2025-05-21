@@ -88,7 +88,9 @@ export default function BookCard({
         )}
 
         {showShelfControls && activeUser && (
-          <div className="mt-auto grid grid-cols-3 gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">            <Button
+          <div className="mt-auto grid grid-cols-3 gap-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+            {" "}
+            <Button
               size="sm"
               variant={currentShelf === "read" ? "primary" : "ghost"}
               onClick={(e) => handleAddToShelf("read", e)}

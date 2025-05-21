@@ -25,7 +25,8 @@ export default function Button({
     "font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center";
 
   const variantClasses = {
-    primary: "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:shadow-md hover:from-blue-700 hover:to-blue-800 active:translate-y-0.5 focus:ring-blue-500",
+    primary:
+      "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:shadow-md hover:from-blue-700 hover:to-blue-800 active:translate-y-0.5 focus:ring-blue-500",
     secondary:
       "bg-gray-200 text-gray-800 hover:bg-gray-300 hover:shadow-sm dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 active:translate-y-0.5 focus:ring-gray-500",
     ghost:
