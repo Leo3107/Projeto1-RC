@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css"; // Local CSS file
 import { StoreInitializer } from "@/components/ui/StoreInitializer";
 import Script from "next/script";
+import AuthProvider from "@/components/ui/AuthProvider"; // Added AuthProvider import
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,7 +52,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
       >
         <StoreInitializer />
-        {children}
+        <AuthProvider> {/* Wrapped children with AuthProvider */}
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

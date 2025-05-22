@@ -43,3 +43,16 @@ export interface OpenLibrarySearchResponse {
 
 // Shelf Type
 export type Shelf = "read" | "currentlyReading" | "wantToRead";
+
+// Represents an item on a user's bookshelf, typically returned by the API
+export interface UserBookShelfEntry {
+  id: string; // ID of the UserBookShelf record
+  userId: string;
+  bookId: string; // OpenLibrary key
+  shelf: Shelf;
+  addedAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  bookTitle?: string | null;
+  bookAuthor?: string | null; // Typically a single string (e.g., primary author)
+  bookCover?: string | null; // URL for the cover image
+}

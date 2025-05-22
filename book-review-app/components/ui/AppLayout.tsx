@@ -2,23 +2,25 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useUserStore } from "@/lib/store/userStore";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useUIStore } from "@/lib/store/uiStore";
 import { DarkModeToggle } from "../ui/Toggle";
+import Button from "@/components/ui/Button";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { activeUser } = useUserStore();
+  const { data: session, status } = useSession();
   const { isDarkMode } = useUIStore();
 
   useEffect(() => {
-    // Apply dark mode class based on the store state
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
   }, [isDarkMode]);
+
+  const isLoadingSession = status === "loading";
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -52,7 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               Home
             </Link>
-            {activeUser && (
+            {session?.user && (
               <Link
                 href="/my-books"
                 className={`hover:text-blue-600 dark:hover:text-blue-400 ${
@@ -79,67 +81,80 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center space-x-4">
             <DarkModeToggle />
 
-            {activeUser ? (
-              <Link href="/users" className="flex items-center">
-                <div className="flex items-center">
-                  <div className="relative w-8 h-8 mr-2">
-                    <Image
-                      src={activeUser.avatar || "/images/default-avatar.svg"}
-                      alt={activeUser.name}
-                      fill
-                      className="rounded-full object-cover"
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">
-                    {activeUser.name}
-                  </span>
-                </div>
-              </Link>
+            {isLoadingSession ? (
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+            ) : session?.user ? (
+              <div className="flex items-center space-x-2">
+                {session.user.image && session.user.name && (
+                  <Link href="/my-books" className="flex items-center">
+                    <div className="relative w-8 h-8 mr-2">
+                      <Image
+                        src={session.user.image}
+                        alt={session.user.name}
+                        fill
+                        className="rounded-full object-cover"
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">
+                      {session.user.name}
+                    </span>
+                  </Link>
+                )}
+                <Button
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  variant="ghost"
+                  size="sm"
+                  className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Sign Out
+                </Button>
+              </div>
             ) : (
-              <Link
-                href="/users"
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-              >
-                Sign In
-              </Link>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => signIn()}
+                  variant="ghost" 
+                  size="sm"
+                  className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700"
+                >
+                  Sign In
+                </Button>
+                <Link href="/auth/signup" passHref>
+                  <Button
+                    as="a" 
+                    variant="primary"
+                    color="primary"
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
+                  >
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </div>
       </header>
 
-      <main className="flex-grow container mx-auto px-4 py-6">{children}</main>
+      <main className="flex-grow container mx-auto px-4 py-8">
+        {children}
+      </main>
 
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                © 2025 BookShelf. All rights reserved.
-              </p>
-            </div>
-            <div className="flex space-x-6">
-              <a
-                href="https://openlibrary.org/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
-              >
-                Powered by OpenLibrary
-              </a>
-              <a
-                href="#"
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href="#"
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
-              >
-                Terms of Service
-              </a>
-            </div>
-          </div>
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+          &copy; {new Date().getFullYear()} BookShelf. All rights reserved.
+          <p className="mt-1">
+            Powered by Next.js, Tailwind CSS, and data from{' '}
+            <a
+              href="https://openlibrary.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline dark:text-blue-400"
+            >
+              Open Library
+            </a>
+            .
+          </p>
         </div>
       </footer>
     </div>

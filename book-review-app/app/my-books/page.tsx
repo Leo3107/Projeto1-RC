@@ -2,45 +2,105 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUserStore } from "@/lib/store/userStore";
+import { useSession } from "next-auth/react";
 import { useBookShelfStore } from "@/lib/store/bookShelfStore";
 import AppLayout from "@/components/ui/AppLayout";
 import BookGrid from "@/components/book/BookGrid";
-import ProfileCard from "@/components/ui/ProfileCard";
-import { Shelf } from "@/lib/types";
-import { saveUsers } from "@/lib/utils/localStorage";
+import { Book, Shelf } from "@/lib/types"; // Import Book type
 import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+
+// Removed local ExtendedSession and ExtendedUser interfaces
+// Types should now be augmented by next-auth.d.ts
 
 export default function MyBooksPage() {
   const router = useRouter();
-  const { activeUser } = useUserStore();
+  // useSession should now correctly infer the session type with user.id
+  const { data: session, status } = useSession();
   const {
     activeShelf,
     shelfBooks,
     isLoading,
+    error,
     setActiveShelf,
     loadUserShelves,
   } = useBookShelfStore();
 
   useEffect(() => {
-    if (!activeUser) {
-      router.push("/users");
+    if (status === "loading") return;
+
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
       return;
     }
-
-    // Load books for user's shelves
-    loadUserShelves(activeUser.id);
-  }, [activeUser, router, loadUserShelves]);
-
-  if (!activeUser) {
-    return null; // Router will redirect
-  }
+    // Ensure session and session.user and session.user.id are defined
+    if (status === "authenticated" && session?.user?.id) {
+      loadUserShelves(session.user.id);
+    }
+  }, [status, session, router, loadUserShelves]);
 
   const shelfCounts = {
-    read: activeUser.shelves.read.length,
-    currentlyReading: activeUser.shelves.currentlyReading.length,
-    wantToRead: activeUser.shelves.wantToRead.length,
+    read: shelfBooks.read.length,
+    currentlyReading: shelfBooks.currentlyReading.length,
+    wantToRead: shelfBooks.wantToRead.length,
   };
+
+  if (status === "loading" || (!session && status !== "unauthenticated")) {
+    return (
+      <AppLayout>
+        <div className="flex justify-center items-center h-screen">
+          <svg
+            className="animate-spin h-10 w-10 text-blue-600"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!session?.user) {
+    return null;
+  }
+
+  const handleRetryLoadShelves = () => {
+    // Ensure session and session.user and session.user.id are defined
+    if (session?.user?.id) {
+      loadUserShelves(session.user.id);
+    }
+  };
+
+  // Corrected handleBookClick to accept a Book object
+  const handleBookClick = (book: Book) => {
+    // Ensure book.id is a string before trying to replace parts of it.
+    // The book ID from OpenLibrary might be like "/works/OL45804W" or just "OL45804W"
+    // The API route for books expects the core ID part.
+    const bookId = typeof book.id === 'string' ? 
+                   book.id.replace("/works/", "").replace("/books/", "") :
+                   ''; 
+    if (bookId) {
+        router.push(`/book/${bookId}`);
+    } else {
+        console.warn("Clicked book with invalid ID:", book);
+        // Optionally, show an error to the user or do nothing
+    }
+  };
+
   return (
     <AppLayout>
       <div className="mb-8">
@@ -48,63 +108,44 @@ export default function MyBooksPage() {
           My Books
         </h1>
 
-        {activeUser && (
-          <div className="mb-8">
-            <ProfileCard
-              user={activeUser}
-              onUpdateProfile={(updatedUser) => {
-                // Update users in localStorage
-                const users = useUserStore.getState().users;
-                const updatedUsers = users.map((user) =>
-                  user.id === updatedUser.id ? updatedUser : user
-                );
-
-                saveUsers(updatedUsers);
-                useUserStore.getState().setUsers(updatedUsers);
-                useUserStore.getState().setActiveUser(updatedUser.id);
-              }}
-            />
-          </div>
+        {session?.user?.name && (
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
+            Welcome back, {session.user.name}!
+          </p>
         )}
 
         <div className="flex flex-wrap gap-4 mb-8">
-          <button
-            onClick={() => setActiveShelf("read")}
-            className={`flex items-center ${
-              activeShelf === "read"
-                ? "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
-            } px-4 py-2 rounded-full font-medium transition-colors`}
-          >
-            Read
-            <Badge className="ml-2">{shelfCounts.read}</Badge>
-          </button>
-          <button
-            onClick={() => setActiveShelf("currentlyReading")}
-            className={`flex items-center ${
-              activeShelf === "currentlyReading"
-                ? "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
-            } px-4 py-2 rounded-full font-medium transition-colors`}
-          >
-            Currently Reading
-            <Badge className="ml-2">{shelfCounts.currentlyReading}</Badge>
-          </button>
-
-          <button
-            onClick={() => setActiveShelf("wantToRead")}
-            className={`flex items-center ${
-              activeShelf === "wantToRead"
-                ? "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
-            } px-4 py-2 rounded-full font-medium transition-colors`}
-          >
-            Want to Read
-            <Badge className="ml-2">{shelfCounts.wantToRead}</Badge>
-          </button>
+          {(["read", "currentlyReading", "wantToRead"] as Shelf[]).map(
+            (shelf) => (
+              <button
+                key={shelf}
+                onClick={() => setActiveShelf(shelf)}
+                className={`flex items-center ${
+                  activeShelf === shelf
+                    ? "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+                } px-4 py-2 rounded-full font-medium transition-colors`}
+              >
+                {shelf === "read" && "Read"}
+                {shelf === "currentlyReading" && "Currently Reading"}
+                {shelf === "wantToRead" && "Want to Read"}
+                <Badge className="ml-2">{shelfCounts[shelf]}</Badge>
+              </button>
+            )
+          )}
         </div>
 
-        {isLoading ? (
+        {error && (
+          <div className="my-4 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 rounded-md">
+            <p className="font-semibold">Error loading books:</p>
+            <p>{error}</p>
+            <Button onClick={handleRetryLoadShelves} className="mt-2">
+              Try Again
+            </Button>
+          </div>
+        )}
+
+        {isLoading && !error ? (
           <div className="flex justify-center items-center h-48">
             <svg
               className="animate-spin h-8 w-8 text-blue-600"
@@ -127,7 +168,7 @@ export default function MyBooksPage() {
               ></path>
             </svg>
           </div>
-        ) : shelfBooks[activeShelf].length === 0 ? (
+        ) : !isLoading && !error && shelfBooks[activeShelf].length === 0 ? (
           <div className="text-center p-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <svg
               className="mx-auto h-12 w-12 text-gray-400"
@@ -162,9 +203,9 @@ export default function MyBooksPage() {
               </button>
             </div>
           </div>
-        ) : (
-          <BookGrid books={shelfBooks[activeShelf]} />
-        )}
+        ) : !isLoading && !error ? (
+          <BookGrid books={shelfBooks[activeShelf]} onBookClick={handleBookClick} />
+        ) : null}
       </div>
     </AppLayout>
   );

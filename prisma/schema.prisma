@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? // For NextAuth
+  passwordHash  String?
+  avatar        String?   // URL to avatar image
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  reviews  Review[]
+  shelves  UserBookShelf[]
+  accounts Account[] // For NextAuth
+  sessions Session[] // For NextAuth
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? // Removed @db.Text
+  access_token      String? // Removed @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? // Removed @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Book {
+  id              String  @id @default(cuid())
+  openLibraryId   String  @unique // ID from OpenLibrary or other external source
+  title           String
+  authors         String? // Changed from String[] to String, store as comma-separated
+  coverImageUrl   String?
+  publishedYear   Int?
+  isbn            String?
+  averageRating   Float?  @default(0)
+  ratingsCount    Int?    @default(0)
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  reviews   Review[]
+  shelvedBy UserBookShelf[]
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int // e.g., 1-5
+  text      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId]) // A user can only review a book once
+}
+
+enum ShelfStatus {
+  WANT_TO_READ
+  READING
+  READ
+}
+
+model UserBookShelf {
+  id        String      @id @default(cuid())
+  status    ShelfStatus
+  addedAt   DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId]) // A book can only have one status per user
+}

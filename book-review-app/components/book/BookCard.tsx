@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
+import { useSession } from "next-auth/react"; // Import useSession
 import { Book, Shelf } from "@/lib/types";
-import { useUserStore } from "@/lib/store/userStore";
 import { useBookShelfStore } from "@/lib/store/bookShelfStore";
 import Card from "../ui/Card";
 import Badge, { formatShelfName, getShelfBadgeVariant } from "../ui/Badge";
@@ -12,35 +12,53 @@ const DEFAULT_COVER = "/images/book-placeholder.svg";
 interface BookCardProps {
   book: Book;
   onClick?: () => void;
-  onAddToShelf?: (shelf: Shelf) => void;
+  // onAddToShelf prop is removed as the component will use the store directly
   showShelfControls?: boolean;
 }
 
 export default function BookCard({
   book,
   onClick,
-  onAddToShelf,
   showShelfControls = true,
 }: BookCardProps) {
-  const { activeUser } = useUserStore();
-  const { getBookCurrentShelf } = useBookShelfStore();
-  const currentShelf = activeUser
-    ? getBookCurrentShelf(activeUser.id, book.id)
-    : null;
+  const { data: session } = useSession();
+  const {
+    addBookToShelf,
+    removeBookFromShelf,
+    getBookCurrentShelf,
+    isLoading: isShelfLoading, // Use a different name to avoid conflict if page has its own isLoading
+  } = useBookShelfStore();
 
-  // Extract year from book object
+  // currentShelf now only depends on the bookId, as the store is user-aware
+  const currentShelf = getBookCurrentShelf(book.id);
+
   const publishYear = book.year ? `(${book.year})` : "";
-
-  // Format authors for display
   const authorText =
     book.author && book.author.length > 0
       ? book.author.join(", ")
       : "Unknown Author";
 
-  const handleAddToShelf = (shelf: Shelf, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the modal
-    if (onAddToShelf) {
-      onAddToShelf(shelf);
+  const handleShelfAction = async (shelf: Shelf, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!session?.user?.id) {
+      // Optionally, redirect to login or show a message
+      console.warn("User not authenticated to perform shelf action.");
+      return;
+    }
+
+    if (currentShelf === shelf) {
+      // Already on this shelf, so remove it
+      await removeBookFromShelf(session.user.id, book.id);
+    } else {
+      // Add to the new shelf (or move from another)
+      await addBookToShelf(
+        session.user.id,
+        book.id,
+        shelf,
+        book.title,
+        book.author.join(", "), // Pass author as string
+        book.coverUrl
+      );
     }
   };
 
@@ -86,34 +104,26 @@ export default function BookCard({
           </Badge>
         )}
 
-        {showShelfControls && activeUser && (
+        {showShelfControls && session?.user && (
           <div className="mt-auto grid grid-cols-3 gap-1">
-            <Button
-              size="sm"
-              variant={currentShelf === "read" ? "primary" : "ghost"}
-              onClick={(e) => handleAddToShelf("read", e)}
-              className="text-xs"
-            >
-              Read
-            </Button>
-            <Button
-              size="sm"
-              variant={
-                currentShelf === "currentlyReading" ? "primary" : "ghost"
-              }
-              onClick={(e) => handleAddToShelf("currentlyReading", e)}
-              className="text-xs"
-            >
-              Reading
-            </Button>
-            <Button
-              size="sm"
-              variant={currentShelf === "wantToRead" ? "primary" : "ghost"}
-              onClick={(e) => handleAddToShelf("wantToRead", e)}
-              className="text-xs"
-            >
-              Want
-            </Button>
+            {(["read", "currentlyReading", "wantToRead"] as Shelf[]).map(
+              (shelfOption) => (
+                <Button
+                  key={shelfOption}
+                  size="sm"
+                  variant={currentShelf === shelfOption ? "primary" : "ghost"}
+                  onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                    handleShelfAction(shelfOption, e)
+                  }
+                  className="text-xs"
+                  disabled={isShelfLoading} // Disable button while shelf action is in progress
+                >
+                  {shelfOption === "read" && "Read"}
+                  {shelfOption === "currentlyReading" && "Reading"}
+                  {shelfOption === "wantToRead" && "Want"}
+                </Button>
+              )
+            )}
           </div>
         )}
       </div>

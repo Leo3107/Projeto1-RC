@@ -1,12 +1,5 @@
 import { create } from "zustand";
-import { Book, Shelf } from "../types";
-import {
-  addToShelf,
-  removeFromShelf,
-  getBookShelf,
-} from "../utils/localStorage";
-import { getBookById } from "../utils/openLibrary";
-import { getBookFromMemoryCache } from "../utils/bookCache";
+import { Book, Shelf, UserBookShelfEntry } from "../types";
 
 interface BookShelfState {
   activeShelf: Shelf;
@@ -16,11 +9,19 @@ interface BookShelfState {
     wantToRead: Book[];
   };
   isLoading: boolean;
+  error: string | null;
   setActiveShelf: (shelf: Shelf) => void;
   loadUserShelves: (userId: string) => Promise<void>;
-  addBookToShelf: (userId: string, bookId: string, shelf: Shelf) => void;
-  removeBookFromShelf: (userId: string, bookId: string, shelf: Shelf) => void;
-  getBookCurrentShelf: (userId: string, bookId: string) => Shelf | null;
+  addBookToShelf: (
+    userId: string,
+    bookId: string,
+    shelf: Shelf,
+    title?: string,
+    author?: string, // Changed to string to match Book type if simplified, or string[] if not
+    coverImage?: string
+  ) => Promise<void>;
+  removeBookFromShelf: (userId: string, bookId: string) => Promise<void>;
+  getBookCurrentShelf: (bookId: string) => Shelf | null;
 }
 
 export const useBookShelfStore = create<BookShelfState>((set, get) => ({
@@ -31,79 +32,99 @@ export const useBookShelfStore = create<BookShelfState>((set, get) => ({
     wantToRead: [],
   },
   isLoading: false,
+  error: null,
 
-  setActiveShelf: (shelf) => set({ activeShelf: shelf }),
+  setActiveShelf: (shelf) => set({ activeShelf: shelf, error: null }),
 
   loadUserShelves: async (userId) => {
-    set({ isLoading: true });
-
+    set({ isLoading: true, error: null });
     try {
-      const user = JSON.parse(
-        localStorage.getItem("bookReview_users") || "[]"
-      ).find((u: any) => u.id === userId);
-
-      if (!user) {
-        set({
-          shelfBooks: { read: [], currentlyReading: [], wantToRead: [] },
-          isLoading: false,
-        });
-        return;
+      const response = await fetch(`/api/bookshelf?userId=${userId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to load bookshelves");
       }
+      const userShelves: UserBookShelfEntry[] = await response.json();
 
-      const shelfBooks: { [key in Shelf]: Book[] } = {
+      const newShelfBooks: BookShelfState["shelfBooks"] = {
         read: [],
         currentlyReading: [],
         wantToRead: [],
       };
 
-      // Load books for each shelf
-      for (const shelf of [
-        "read",
-        "currentlyReading",
-        "wantToRead",
-      ] as Shelf[]) {
-        const bookIds = user.shelves[shelf];
-        const books: Book[] = [];
-
-        for (const bookId of bookIds) {
-          // First check the cache
-          let book = getBookFromMemoryCache(bookId);
-
-          // If not in cache, fetch from API
-          if (!book) {
-            book = await getBookById(bookId);
-          }
-
-          if (book) {
-            books.push(book);
-          }
+      for (const item of userShelves) {
+        const book: Book = {
+          id: item.bookId,
+          title: item.bookTitle || "Unknown Title",
+          author: item.bookAuthor ? [item.bookAuthor] : ["Unknown Author"], // Ensure author is string[]
+          coverUrl: item.bookCover || undefined, // Corrected to coverUrl from Book type
+          // year and genres are optional and might not be present here
+        };
+        // Ensure item.shelf is a valid Shelf key
+        if (item.shelf === "read" || item.shelf === "currentlyReading" || item.shelf === "wantToRead") {
+            newShelfBooks[item.shelf].push(book);
+        } else {
+            console.warn(`Invalid shelf type received from API: ${item.shelf}`);
         }
-
-        shelfBooks[shelf] = books;
       }
-
-      set({ shelfBooks, isLoading: false });
+      set({ shelfBooks: newShelfBooks, isLoading: false });
     } catch (error) {
       console.error("Error loading user shelves:", error);
-      set({ isLoading: false });
+      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      set({ isLoading: false, error: message });
     }
   },
 
-  addBookToShelf: (userId, bookId, shelf) => {
-    addToShelf(userId, bookId, shelf);
-
-    // Refresh shelves after change
-    get().loadUserShelves(userId);
+  addBookToShelf: async (userId, bookId, shelf, title, author, coverImage) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch("/api/bookshelf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, bookId, shelf, title, author, coverImage }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add book to shelf");
+      }
+      await get().loadUserShelves(userId);
+    } catch (error) {
+      console.error("Error adding book to shelf:", error);
+      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      set({ isLoading: false, error: message });
+    }
   },
 
-  removeBookFromShelf: (userId, bookId, shelf) => {
-    removeFromShelf(userId, bookId, shelf);
-
-    // Refresh shelves after change
-    get().loadUserShelves(userId);
+  removeBookFromShelf: async (userId, bookId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch(`/api/bookshelf/${bookId}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to remove book from shelf");
+      }
+      await get().loadUserShelves(userId);
+    } catch (error) {
+      console.error("Error removing book from shelf:", error);
+      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      set({ isLoading: false, error: message });
+    }
   },
 
-  getBookCurrentShelf: (userId, bookId) => {
-    return getBookShelf(userId, bookId);
+  getBookCurrentShelf: (bookId) => {
+    const { shelfBooks } = get();
+    for (const shelfKey in shelfBooks) {
+      const shelf = shelfKey as Shelf;
+      if (shelfBooks[shelf].some((book: Book) => book.id === bookId)) {
+        return shelf;
+      }
+    }
+    return null;
   },
 }));

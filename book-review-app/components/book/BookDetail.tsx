@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { useSession } from "next-auth/react"; // Import useSession
 import { Book, Review, Shelf } from "@/lib/types";
-import { useUserStore } from "@/lib/store/userStore";
 import { useBookShelfStore } from "@/lib/store/bookShelfStore";
-import { getReviewsByBookId } from "@/lib/utils/localStorage";
 import Badge, { formatShelfName, getShelfBadgeVariant } from "../ui/Badge";
 import Button from "../ui/Button";
 import ReviewList from "../review/ReviewList";
+import ReviewForm from "../review/ReviewForm"; // Import ReviewForm
 
 const DEFAULT_COVER = "/images/book-placeholder.svg";
 
@@ -15,34 +15,67 @@ interface BookDetailProps {
 }
 
 export default function BookDetail({ book }: BookDetailProps) {
-  const { activeUser } = useUserStore();
-  const { addBookToShelf, getBookCurrentShelf, loadUserShelves } =
-    useBookShelfStore();
+  const { data: session } = useSession(); // Use NextAuth session
+  const {
+    addBookToShelf,
+    removeBookFromShelf,
+    getBookCurrentShelf,
+    isLoading: isShelfLoading, // isLoading from bookShelfStore
+  } = useBookShelfStore();
+
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
 
-  const currentShelf = activeUser
-    ? getBookCurrentShelf(activeUser.id, book.id)
-    : null;
+  const currentShelf = getBookCurrentShelf(book.id);
+
+  const fetchReviews = async () => {
+    setIsLoadingReviews(true);
+    setReviewsError(null);
+    try {
+      const response = await fetch(`/api/reviews?bookId=${book.id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch reviews");
+      }
+      const data: Review[] = await response.json();
+      setReviews(data);
+    } catch (error: any) {
+      console.error("Error fetching reviews:", error);
+      setReviewsError(error.message || "An unknown error occurred");
+    }
+    setIsLoadingReviews(false);
+  };
 
   useEffect(() => {
-    // Load reviews for this book
-    const bookReviews = getReviewsByBookId(book.id);
-    setReviews(bookReviews);
+    if (book.id) {
+      fetchReviews();
+    }
   }, [book.id]);
 
-  const handleAddToShelf = (shelf: Shelf) => {
-    if (activeUser) {
-      addBookToShelf(activeUser.id, book.id, shelf);
-      // Reload shelf data
-      loadUserShelves(activeUser.id);
+  const handleShelfAction = async (shelf: Shelf) => {
+    if (!session?.user?.id) {
+      console.warn("User not authenticated to perform shelf action.");
+      return;
+    }
+
+    if (currentShelf === shelf) {
+      await removeBookFromShelf(session.user.id, book.id);
+    } else {
+      await addBookToShelf(
+        session.user.id,
+        book.id,
+        shelf,
+        book.title,
+        book.author.join(", "),
+        book.coverUrl
+      );
     }
   };
 
   const handleReviewChange = () => {
-    // Reload reviews after a change
-    const bookReviews = getReviewsByBookId(book.id);
-    setReviews(bookReviews);
+    fetchReviews();
   };
 
   return (
@@ -93,36 +126,44 @@ export default function BookDetail({ book }: BookDetailProps) {
             </Badge>
           )}
 
-          {activeUser && (
+          {session?.user && (
             <div className="mb-6">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Add to your shelf:
+                Update shelf:
               </p>
-              <div className="flex space-x-2">
-                <Button
-                  variant={currentShelf === "read" ? "primary" : "secondary"}
-                  onClick={() => handleAddToShelf("read")}
-                >
-                  Read
-                </Button>
-                <Button
-                  variant={
-                    currentShelf === "currentlyReading"
-                      ? "primary"
-                      : "secondary"
-                  }
-                  onClick={() => handleAddToShelf("currentlyReading")}
-                >
-                  Currently Reading
-                </Button>
-                <Button
-                  variant={
-                    currentShelf === "wantToRead" ? "primary" : "secondary"
-                  }
-                  onClick={() => handleAddToShelf("wantToRead")}
-                >
-                  Want to Read
-                </Button>
+              <div className="flex flex-wrap gap-2">
+                {(["read", "currentlyReading", "wantToRead"] as Shelf[]).map(
+                  (shelfOption) => (
+                    <Button
+                      key={shelfOption}
+                      variant={
+                        currentShelf === shelfOption ? "primary" : "secondary"
+                      }
+                      onClick={() => handleShelfAction(shelfOption)}
+                      disabled={isShelfLoading}
+                      size="sm"
+                    >
+                      {shelfOption === "read" && "Read"}
+                      {shelfOption === "currentlyReading" && "Reading"}
+                      {shelfOption === "wantToRead" && "Want to Read"}
+                    </Button>
+                  )
+                )}
+                {currentShelf && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      if (session?.user?.id && currentShelf) {
+                        removeBookFromShelf(session.user.id, book.id);
+                      }
+                    }}
+                    disabled={isShelfLoading}
+                    size="sm"
+                    className="text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900"
+                  >
+                    Remove from Shelf
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -180,7 +221,6 @@ export default function BookDetail({ book }: BookDetailProps) {
                   About this Book
                 </h3>
                 <p className="text-gray-700 dark:text-gray-300">
-                  {/* This is where a description would go if available in the API */}
                   This book is available on OpenLibrary with ID: {book.id}
                 </p>
               </div>
@@ -188,11 +228,37 @@ export default function BookDetail({ book }: BookDetailProps) {
           )}
 
           {activeTab === "reviews" && (
-            <ReviewList
-              bookId={book.id}
-              reviews={reviews}
-              onReviewChange={handleReviewChange}
-            />
+            <>
+              {session?.user && (
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    Write a Review
+                  </h3>
+                  <ReviewForm
+                    bookId={book.id}
+                    userId={session.user.id}
+                    onReviewSubmitted={handleReviewChange}
+                  />
+                </div>
+              )}
+              {isLoadingReviews && <p>Loading reviews...</p>}
+              {reviewsError && (
+                <div className="my-4 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 rounded-md">
+                  <p className="font-semibold">Error loading reviews:</p>
+                  <p>{reviewsError}</p>
+                  <Button onClick={fetchReviews} className="mt-2">
+                    Try Again
+                  </Button>
+                </div>
+              )}
+              {!isLoadingReviews && !reviewsError && (
+                <ReviewList
+                  reviews={reviews}
+                  currentUserId={session?.user?.id}
+                  onReviewChange={handleReviewChange}
+                />
+              )}
+            </>
           )}
         </div>
       </div>
