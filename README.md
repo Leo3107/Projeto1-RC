@@ -28,16 +28,28 @@ Este site permite aos usuários cadastrarem-se, acessarem uma lista de livros, d
 ## 📦 Instalação
 
 1. Clone o repositório:
-   git clone [https://github.com/Leo3107/Projeto1-RC.git](https://github.com/Leo3107/Projeto1-RC.git)
+
+   ```bash
+   git clone https://github.com/Leo3107/Projeto1-RC.git
+   ```
 
 2. Acesse a pasta do projeto:
+
+   ```bash
    cd Projeto1-RC/DW/book-review-app
+   ```
 
 3. Instale as dependências:
+
+   ```bash
    npm install
+   ```
 
 4. Inicie o servidor:
+
+   ```bash
    node app.js
+   ```
 
 5. Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 
