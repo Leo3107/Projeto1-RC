@@ -32,7 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center space-x-4">
+          <nav className="hidden md:flex items-center space-x-6">
             <Link
               href="/"
               className={`hover:text-blue-600 dark:hover:text-blue-400 px-4 py-2 rounded-md transition-all duration-200 ${
@@ -97,7 +97,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
+      <main className="flex-grow w-full px-8 py-8">{children}</main>
       <footer className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 py-8 shadow-md">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">

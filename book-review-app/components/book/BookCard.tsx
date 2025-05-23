@@ -69,7 +69,7 @@ export default function BookCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
 
-      <div className="p-5 flex flex-col flex-grow">
+      <div className="p-6 flex flex-col flex-grow">
         <h3 className="text-lg font-semibold line-clamp-2 text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           {book.title}
         </h3>

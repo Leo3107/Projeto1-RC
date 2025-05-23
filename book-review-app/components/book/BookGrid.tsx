@@ -32,8 +32,8 @@ export default function BookGrid({
   // If loading, show skeleton
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {Array.from({ length: 8 }).map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="h-full">
             <BookCardSkeleton />
           </div>
@@ -50,9 +50,10 @@ export default function BookGrid({
       </div>
     );
   }
+
   // Otherwise, render the book grid
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {books.map((book) => (
         <div key={book.id} className="h-full">
           <BookCard

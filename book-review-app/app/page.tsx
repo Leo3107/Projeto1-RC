@@ -38,7 +38,7 @@ export default function Home() {
 
   return (
     <AppLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Discover Books
@@ -47,15 +47,14 @@ export default function Home() {
             Search for books to add to your shelves and leave reviews.
           </p>
         </div>
-        <div className="mb-6">
-          <SearchBar onSearch={handleSearch} />
+        <SearchBar onSearch={handleSearch} />
+        <div className="mt-8">
+          <BookGrid
+            books={books}
+            onBookClick={handleBookClick}
+            isLoading={isLoading}
+          />
         </div>
-        <BookGrid
-          books={books}
-          onBookClick={handleBookClick}
-          isLoading={isLoading}
-          emptyMessage="Search for books to get started"
-        />{" "}
       </div>
 
       {/* Include the modularized book detail modal */}
