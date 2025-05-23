@@ -1,76 +1,56 @@
-# BookShelf - Book Review Application
+# Book Review App
 
-BookShelf is a full-stack book review application built with React, TypeScript, Tailwind CSS, and Next.js. It allows users to create profiles, maintain personal book shelves, search for books via the OpenLibrary API, and share reviews.
+Projeto desenvolvido para a disciplina de Redes de Computadores, com o objetivo de criar uma plataforma web para avaliação de livros.
 
-## Features
+## 📚 Descrição
 
-- **User System**: Local user profiles stored in browser's localStorage
-- **Book Shelves**: Organize books into "Read", "Currently Reading", and "Want to Read" shelves
-- **Book Search**: Search for books using the OpenLibrary API with filters for genre and year
-- **Book Details**: View detailed information about books, including covers and publication details
-- **Reviews & Ratings**: Add, edit, and delete reviews with ratings and spoiler warnings
-- **Responsive Design**: Fully responsive UI that works across desktop and mobile devices
-- **Dark Mode**: Toggle between light and dark themes
-- **Book Caching**: Efficient data loading with memory and localStorage cache
+Este site permite aos usuários cadastrarem-se, acessarem uma lista de livros, deixarem avaliações e comentários sobre as obras lidas. A aplicação busca promover a troca de opiniões e o incentivo à leitura por meio de uma comunidade interativa.
 
-## Tech Stack
+## 🚀 Funcionalidades
 
-- **Frontend**: Next.js 14 (App Router) with React 18
-- **Styling**: Tailwind CSS with custom UI components
-- **State Management**: Zustand for client-side state
-- **API Integration**: OpenLibrary for book search and cover images
-- **Storage**: Browser localStorage for user data persistence
-- **Performance**: In-memory caching with localStorage backup
+* Cadastro e login de usuários
+* Listagem de livros com capas e informações
+* Avaliação dos livros com estrelas
+* Comentários sobre os livros
+* Visualização de avaliações anteriores
+* Filtros por gênero, nota ou popularidade (em desenvolvimento)
 
-## Project Structure
+## 🛠️ Tecnologias Utilizadas
 
-```
-book-review-app/
-├── app/                      # Next.js app router pages
-│   ├── page.tsx              # Home page (search functionality)
-│   ├── book/[id]/page.tsx    # Book detail page
-│   ├── my-books/page.tsx     # User's book shelves page
-│   └── users/page.tsx        # User selection and creation page
-├── components/               # React components
-│   ├── book/                 # Book-related components
-│   ├── review/               # Review-related components
-│   └── ui/                   # UI components (buttons, cards, etc.)
-├── lib/                      # Application logic
-│   ├── hooks/                # Custom React hooks
-│   ├── store/                # Zustand stores
-│   ├── types/                # TypeScript type definitions
-│   └── utils/                # Utility functions
-└── public/                   # Static assets
-    └── images/               # Images and icons
-```
+* HTML5
+* CSS3
+* JavaScript
+* Node.js (back-end)
+* Express (roteamento)
+* Socket programming (para atividades práticas da disciplina)
+* Wireshark (análise de pacotes e estudo de rede)
 
-## Key Concepts
+## 📦 Instalação
 
-### Data Architecture
+1. Clone o repositório:
+   git clone [https://github.com/Leo3107/Projeto1-RC.git](https://github.com/Leo3107/Projeto1-RC.git)
 
-- **User data**: Stored in localStorage for persistence
-- **Book data**: Fetched from OpenLibrary API and cached in memory and localStorage
-- **Reviews**: User-generated content stored in localStorage
-- **Shelves**: Book collections organized by reading status
+2. Acesse a pasta do projeto:
+   cd Projeto1-RC/DW/book-review-app
 
-### State Management
+3. Instale as dependências:
+   npm install
 
-- **userStore**: Manages active user and user list
-- **bookSearchStore**: Handles book search queries and results
-- **bookShelfStore**: Manages user's book shelves and shelf operations
-- **uiStore**: Controls UI state like dark mode preference
+4. Inicie o servidor:
+   node app.js
 
-## Learn More
+5. Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 
-To learn more about Next.js, take a look at the following resources:
+## 🎓 Projeto Acadêmico
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Este projeto está sendo desenvolvido como parte da disciplina **Redes de Computadores**, no curso de Ciência da Computação. Ele envolve tanto o desenvolvimento web quanto conceitos de rede como sockets e monitoramento de pacotes com o Wireshark.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 👥 Integrantes
 
-## Deploy on Vercel
+* Antonio Barros Coelho – 241038100
+* Davi Galvão Guerra – 241038577
+* Leonardo Mileo Moreira Krauss Guimarães – 241032690
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📄 Licença
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Uso acadêmico. Todos os direitos reservados aos autores.
