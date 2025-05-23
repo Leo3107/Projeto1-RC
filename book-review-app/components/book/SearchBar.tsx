@@ -54,6 +54,7 @@ export default function SearchBar({
     }
   };
 
+  // Handle year input to only allow numbers
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Only allow numbers or empty string
