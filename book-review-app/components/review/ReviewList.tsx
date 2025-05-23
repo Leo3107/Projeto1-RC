@@ -103,25 +103,28 @@ interface ReviewListProps {
   bookId: string;
   reviews: Review[];
   onReviewChange: () => void;
+  currentUserId?: string; // Added currentUserId as an optional prop
 }
 
 export default function ReviewList({
   bookId,
   reviews,
   onReviewChange,
+  currentUserId, // Use currentUserId
 }: ReviewListProps) {
-  const { activeUser } = useUserStore();
+  const { activeUser } = useUserStore(); // This might be redundant if currentUserId is reliable
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
 
-  // Get active user's review
-  const activeUserReview = activeUser
-    ? reviews.find((r) => r.userId === activeUser.id)
-    : null;
+  // Get active user's review using currentUserId if available, otherwise fallback to activeUser from store
+  const activeUserReview = reviews.find(
+    (r) => r.userId === (currentUserId || activeUser?.id)
+  );
 
   // Get all other reviews
-  const otherReviews = activeUser
-    ? reviews.filter((r) => r.userId !== activeUser.id)
-    : reviews;
+  const otherReviews = reviews.filter(
+    (r) => r.userId !== (currentUserId || activeUser?.id)
+  );
+
   // Find user for a review
   const getUserForReview = (userId: string): User | undefined => {
     const users = getUsers();
@@ -146,7 +149,8 @@ export default function ReviewList({
     setEditingReviewId(null);
   };
 
-  if (reviews.length === 0 && !activeUser) {
+  if (reviews.length === 0 && !currentUserId) {
+    // Check against currentUserId
     return (
       <div className="text-center py-4">
         <p className="text-gray-500 dark:text-gray-400">
@@ -159,79 +163,93 @@ export default function ReviewList({
   return (
     <div className="space-y-4">
       {/* Active user's review or review form */}
-      {activeUser && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
-            {activeUserReview && editingReviewId !== activeUserReview.id
-              ? "Your Review"
-              : activeUserReview
-              ? "Edit Your Review"
-              : "Add Your Review"}
-          </h3>
-
-          {activeUserReview && editingReviewId !== activeUserReview.id ? (
+      {currentUserId &&
+        activeUserReview &&
+        editingReviewId !== activeUserReview.id && (
+          <div className="mb-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
+              Your Review
+            </h3>
             <ReviewItem
               review={activeUserReview}
-              user={activeUser}
+              // TODO: Need a way to get the full User object for the current user if not just activeUser from store
+              // For now, assuming activeUser from store is sufficient if currentUserId matches activeUser.id
+              user={
+                activeUser && activeUser.id === currentUserId
+                  ? activeUser
+                  : ({
+                      id: currentUserId,
+                      name: "You",
+                      avatar: "",
+                    } as User) /* Placeholder */
+              }
               onDelete={() => handleDeleteReview(activeUserReview.id)}
               onEdit={() => handleEditReview(activeUserReview.id)}
               canModify={true}
             />
-          ) : (
-            <ReviewForm
-              bookId={bookId}
-              userId={activeUser.id}
-              initialRating={
-                editingReviewId && activeUserReview
-                  ? activeUserReview.rating
-                  : 0
-              }
-              initialText={
-                editingReviewId && activeUserReview ? activeUserReview.text : ""
-              }
-              initialHasSpoilers={
-                editingReviewId && activeUserReview
-                  ? activeUserReview.hasSpoilers
-                  : false
-              }
-              onSubmitSuccess={handleEditSuccess}
-              onCancel={
-                editingReviewId && activeUserReview
-                  ? handleCancelEdit
-                  : undefined
-              }
-            />
-          )}
+          </div>
+        )}
+
+      {/* Form for editing existing review or adding a new one if no review exists for current user */}
+      {currentUserId && (editingReviewId || !activeUserReview) && (
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
+            {editingReviewId ? "Edit Your Review" : "Add Your Review"}
+          </h3>
+          <ReviewForm
+            bookId={bookId}
+            userId={currentUserId}
+            initialRating={
+              editingReviewId && activeUserReview ? activeUserReview.rating : 0
+            }
+            initialText={
+              editingReviewId && activeUserReview ? activeUserReview.text : ""
+            }
+            initialHasSpoilers={
+              editingReviewId && activeUserReview
+                ? activeUserReview.hasSpoilers
+                : false
+            }
+            onSubmitSuccess={handleEditSuccess}
+            onCancel={editingReviewId ? handleCancelEdit : undefined}
+          />
         </div>
       )}
 
-      {/* Other reviews */}
+      {/* Other users' reviews */}
       {otherReviews.length > 0 && (
         <div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
-            {otherReviews.length === 1
-              ? "1 Review"
-              : `${otherReviews.length} Reviews`}
+            Other Reviews
           </h3>
           <div className="space-y-4">
             {otherReviews.map((review) => {
-              const user = getUserForReview(review.userId);
-              if (!user) return null;
-
-              return (
+              const reviewUser = getUserForReview(review.userId);
+              return reviewUser ? (
                 <ReviewItem
                   key={review.id}
                   review={review}
-                  user={user}
+                  user={reviewUser}
                   onDelete={() => handleDeleteReview(review.id)}
                   onEdit={() => handleEditReview(review.id)}
-                  canModify={activeUser?.id === review.userId}
+                  canModify={review.userId === currentUserId}
                 />
-              );
+              ) : null;
             })}
           </div>
         </div>
       )}
+
+      {reviews.length === 0 &&
+        currentUserId &&
+        !activeUserReview &&
+        !editingReviewId && (
+          <div className="text-center py-4">
+            <p className="text-gray-500 dark:text-gray-400">
+              Be the first to review this book!
+            </p>
+          </div>
+        )}
     </div>
   );
 }

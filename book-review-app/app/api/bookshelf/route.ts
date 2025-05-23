@@ -24,7 +24,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!Object.values(BookStatus).includes(status as BookStatus)) {
-      return NextResponse.json({ message: "Invalid book status" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Invalid book status" },
+        { status: 400 }
+      );
     }
 
     // Ensure the book exists in the database, or create it

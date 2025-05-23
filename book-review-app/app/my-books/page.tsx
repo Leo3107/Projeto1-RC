@@ -90,14 +90,15 @@ export default function MyBooksPage() {
     // Ensure book.id is a string before trying to replace parts of it.
     // The book ID from OpenLibrary might be like "/works/OL45804W" or just "OL45804W"
     // The API route for books expects the core ID part.
-    const bookId = typeof book.id === 'string' ? 
-                   book.id.replace("/works/", "").replace("/books/", "") :
-                   ''; 
+    const bookId =
+      typeof book.id === "string"
+        ? book.id.replace("/works/", "").replace("/books/", "")
+        : "";
     if (bookId) {
-        router.push(`/book/${bookId}`);
+      router.push(`/book/${bookId}`);
     } else {
-        console.warn("Clicked book with invalid ID:", book);
-        // Optionally, show an error to the user or do nothing
+      console.warn("Clicked book with invalid ID:", book);
+      // Optionally, show an error to the user or do nothing
     }
   };
 
@@ -204,7 +205,10 @@ export default function MyBooksPage() {
             </div>
           </div>
         ) : !isLoading && !error ? (
-          <BookGrid books={shelfBooks[activeShelf]} onBookClick={handleBookClick} />
+          <BookGrid
+            books={shelfBooks[activeShelf]}
+            onBookClick={handleBookClick}
+          />
         ) : null}
       </div>
     </AppLayout>

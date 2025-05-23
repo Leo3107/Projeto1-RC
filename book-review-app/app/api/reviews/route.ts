@@ -16,7 +16,10 @@ export async function POST(request: NextRequest) {
     const { id: bookId, title, authors, coverUrl, publishedYear } = bookData;
 
     if (!bookId || !title || !rating) {
-      return NextResponse.json({ message: "Missing required fields (bookId, title, rating)" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Missing required fields (bookId, title, rating)" },
+        { status: 400 }
+      );
     }
 
     // Ensure the book exists in the database, or create it
@@ -54,7 +57,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(review, { status: 201 });
   } catch (error) {
     console.error("Error creating review:", error);
-    return NextResponse.json({ message: "Error creating review" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Error creating review" },
+      { status: 500 }
+    );
   }
 }
 
@@ -85,16 +91,22 @@ export async function GET(request: NextRequest) {
           book: true, // Include book details when fetching by userId
           user: {
             select: { id: true, name: true, image: true },
-          }, 
+          },
         },
         orderBy: { createdAt: "desc" },
       });
       return NextResponse.json(reviews);
     }
 
-    return NextResponse.json({ message: "Missing bookId or userId parameter" }, { status: 400 });
+    return NextResponse.json(
+      { message: "Missing bookId or userId parameter" },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("Error fetching reviews:", error);
-    return NextResponse.json({ message: "Error fetching reviews" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Error fetching reviews" },
+      { status: 500 }
+    );
   }
 }

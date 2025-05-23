@@ -23,7 +23,7 @@ export const useBookSearchStore = create<BookSearchState>((set, get) => ({
   error: null,
   filters: {},
   setSearchQuery: (query) => set({ searchQuery: query }),
-  setFilters: (filters) => set({ filters, searchQuery: "" }), 
+  setFilters: (filters) => set({ filters, searchQuery: "" }),
   searchBooksAsync: async (query?: string) => {
     const currentQuery = query !== undefined ? query : get().searchQuery;
     const { filters } = get();
@@ -47,20 +47,36 @@ export const useBookSearchStore = create<BookSearchState>((set, get) => ({
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
-        } catch (_error) { // Use underscore to indicate unused variable
+        } catch (_error) {
+          // Use underscore to indicate unused variable
           errorMessage = response.statusText || errorMessage;
         }
         throw new Error(errorMessage);
       }
       const booksData: Book[] = await response.json();
       set({ books: booksData, isLoading: false });
-    } catch (err: unknown) { 
+    } catch (err: unknown) {
       if (err instanceof Error) {
-        set({ error: err.message || "Failed to search books", isLoading: false, books: [] });
+        set({
+          error: err.message || "Failed to search books",
+          isLoading: false,
+          books: [],
+        });
       } else {
-        set({ error: "An unknown error occurred", isLoading: false, books: [] });
+        set({
+          error: "An unknown error occurred",
+          isLoading: false,
+          books: [],
+        });
       }
     }
   },
-  clearSearch: () => set({ searchQuery: "", books: [], error: null, isLoading: false, filters: {} }),
+  clearSearch: () =>
+    set({
+      searchQuery: "",
+      books: [],
+      error: null,
+      isLoading: false,
+      filters: {},
+    }),
 }));

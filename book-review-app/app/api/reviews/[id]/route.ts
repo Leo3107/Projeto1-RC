@@ -15,7 +15,10 @@ export async function PUT(
 
   const reviewId = params.id;
   if (!reviewId) {
-    return NextResponse.json({ message: "Review ID is required" }, { status: 400 });
+    return NextResponse.json(
+      { message: "Review ID is required" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -23,7 +26,10 @@ export async function PUT(
     const { rating, comment } = body;
 
     if (rating === undefined && comment === undefined) {
-      return NextResponse.json({ message: "No fields to update" }, { status: 400 });
+      return NextResponse.json(
+        { message: "No fields to update" },
+        { status: 400 }
+      );
     }
 
     const reviewToUpdate = await prisma.review.findUnique({
@@ -31,11 +37,17 @@ export async function PUT(
     });
 
     if (!reviewToUpdate) {
-      return NextResponse.json({ message: "Review not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Review not found" },
+        { status: 404 }
+      );
     }
 
     if (reviewToUpdate.userId !== session.user.id) {
-      return NextResponse.json({ message: "Forbidden - You can only update your own reviews" }, { status: 403 });
+      return NextResponse.json(
+        { message: "Forbidden - You can only update your own reviews" },
+        { status: 403 }
+      );
     }
 
     const updatedReview = await prisma.review.update({
@@ -54,7 +66,10 @@ export async function PUT(
     return NextResponse.json(updatedReview);
   } catch (error) {
     console.error(`Error updating review ${reviewId}:`, error);
-    return NextResponse.json({ message: "Error updating review" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Error updating review" },
+      { status: 500 }
+    );
   }
 }
 
@@ -70,7 +85,10 @@ export async function DELETE(
 
   const reviewId = params.id;
   if (!reviewId) {
-    return NextResponse.json({ message: "Review ID is required" }, { status: 400 });
+    return NextResponse.json(
+      { message: "Review ID is required" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -79,20 +97,32 @@ export async function DELETE(
     });
 
     if (!reviewToDelete) {
-      return NextResponse.json({ message: "Review not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Review not found" },
+        { status: 404 }
+      );
     }
 
     if (reviewToDelete.userId !== session.user.id) {
-      return NextResponse.json({ message: "Forbidden - You can only delete your own reviews" }, { status: 403 });
+      return NextResponse.json(
+        { message: "Forbidden - You can only delete your own reviews" },
+        { status: 403 }
+      );
     }
 
     await prisma.review.delete({
       where: { id: reviewId },
     });
 
-    return NextResponse.json({ message: "Review deleted successfully" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Review deleted successfully" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error(`Error deleting review ${reviewId}:`, error);
-    return NextResponse.json({ message: "Error deleting review" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Error deleting review" },
+      { status: 500 }
+    );
   }
 }

@@ -22,7 +22,10 @@ export async function DELETE(
   // Prisma schema uses the full ID string including potentially "/works/"
 
   if (!bookId) {
-    return NextResponse.json({ message: "Book ID is required" }, { status: 400 });
+    return NextResponse.json(
+      { message: "Book ID is required" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -38,7 +41,10 @@ export async function DELETE(
     if (!deletedEntry) {
       // This case might not be hit if Prisma throws an error for not found record to delete
       // P2025: An operation failed because it depends on one or more records that were required but not found.
-      return NextResponse.json({ message: "Book not found on shelf" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Book not found on shelf" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(
@@ -47,8 +53,12 @@ export async function DELETE(
     );
   } catch (error: any) {
     // Check if the error is due to the record not being found
-    if (error.code === 'P2025') { // Prisma error code for record not found
-        return NextResponse.json({ message: "Book not found on shelf or already removed" }, { status: 404 });
+    if (error.code === "P2025") {
+      // Prisma error code for record not found
+      return NextResponse.json(
+        { message: "Book not found on shelf or already removed" },
+        { status: 404 }
+      );
     }
     console.error(`Error removing book ${bookId} from shelf:`, error);
     return NextResponse.json(

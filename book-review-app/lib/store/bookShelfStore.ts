@@ -61,16 +61,21 @@ export const useBookShelfStore = create<BookShelfState>((set, get) => ({
           // year and genres are optional and might not be present here
         };
         // Ensure item.shelf is a valid Shelf key
-        if (item.shelf === "read" || item.shelf === "currentlyReading" || item.shelf === "wantToRead") {
-            newShelfBooks[item.shelf].push(book);
+        if (
+          item.shelf === "read" ||
+          item.shelf === "currentlyReading" ||
+          item.shelf === "wantToRead"
+        ) {
+          newShelfBooks[item.shelf].push(book);
         } else {
-            console.warn(`Invalid shelf type received from API: ${item.shelf}`);
+          console.warn(`Invalid shelf type received from API: ${item.shelf}`);
         }
       }
       set({ shelfBooks: newShelfBooks, isLoading: false });
     } catch (error) {
       console.error("Error loading user shelves:", error);
-      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      const message =
+        error instanceof Error ? error.message : "An unknown error occurred";
       set({ isLoading: false, error: message });
     }
   },
@@ -81,7 +86,14 @@ export const useBookShelfStore = create<BookShelfState>((set, get) => ({
       const response = await fetch("/api/bookshelf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, bookId, shelf, title, author, coverImage }),
+        body: JSON.stringify({
+          userId,
+          bookId,
+          shelf,
+          title,
+          author,
+          coverImage,
+        }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -90,7 +102,8 @@ export const useBookShelfStore = create<BookShelfState>((set, get) => ({
       await get().loadUserShelves(userId);
     } catch (error) {
       console.error("Error adding book to shelf:", error);
-      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      const message =
+        error instanceof Error ? error.message : "An unknown error occurred";
       set({ isLoading: false, error: message });
     }
   },
@@ -98,21 +111,22 @@ export const useBookShelfStore = create<BookShelfState>((set, get) => ({
   removeBookFromShelf: async (userId, bookId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch(`/api/bookshelf/${bookId}`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId }),
-        }
-      );
+      const response = await fetch(`/api/bookshelf/${bookId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to remove book from shelf");
+        throw new Error(
+          errorData.message || "Failed to remove book from shelf"
+        );
       }
       await get().loadUserShelves(userId);
     } catch (error) {
       console.error("Error removing book from shelf:", error);
-      const message = error instanceof Error ? error.message : "An unknown error occurred";
+      const message =
+        error instanceof Error ? error.message : "An unknown error occurred";
       set({ isLoading: false, error: message });
     }
   },

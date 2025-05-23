@@ -42,22 +42,28 @@ export const batchSaveBooks = (books: Book[]): void => {
   });
 
   // Update localStorage in a single operation
-  const cachedBooks = getCachedBooks();
-  const bookMap = new Map(cachedBooks.map((book) => [book.id, book]));
+  // Only attempt to use localStorage if in a browser environment
+  if (typeof window !== "undefined") {
+    const cachedBooks = getCachedBooks(); // This function should also be safe or guarded
+    const bookMap = new Map(cachedBooks.map((book) => [book.id, book]));
 
-  books.forEach((book) => {
-    bookMap.set(book.id, book);
-  });
+    books.forEach((book) => {
+      bookMap.set(book.id, book);
+    });
 
-  localStorage.setItem(
-    "bookReview_cachedBooks",
-    JSON.stringify(Array.from(bookMap.values()))
-  );
+    localStorage.setItem(
+      "bookReview_cachedBooks",
+      JSON.stringify(Array.from(bookMap.values()))
+    );
+  }
 };
 
 // Clear the entire book cache (both memory and localStorage)
 export const clearBookCache = (): void => {
-  localStorage.removeItem("bookReview_cachedBooks");
+  // Only attempt to use localStorage if in a browser environment
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("bookReview_cachedBooks");
+  }
   Object.keys(memoryCache).forEach((key) => {
     delete memoryCache[key];
   });

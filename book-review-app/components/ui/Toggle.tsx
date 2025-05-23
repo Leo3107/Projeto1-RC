@@ -8,6 +8,7 @@ interface ToggleProps {
   label?: string;
   size?: "sm" | "md";
   className?: string;
+  disabled?: boolean; // Add disabled prop
 }
 
 export default function Toggle({
@@ -16,6 +17,7 @@ export default function Toggle({
   label,
   size = "md",
   className = "",
+  disabled = false, // Add disabled prop
 }: ToggleProps) {
   const sizeClasses = {
     sm: "h-4 w-8",
@@ -36,12 +38,15 @@ export default function Toggle({
     <div className={`flex items-center ${className}`}>
       <Switch
         checked={isEnabled}
-        onChange={onChange}
+        onChange={disabled ? () => {} : onChange} // Prevent change if disabled
+        disabled={disabled} // Pass disabled to Switch
         className={`${
           isEnabled ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
         } relative inline-flex ${
           sizeClasses[size]
-        } items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+        } items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          disabled ? "opacity-50 cursor-not-allowed" : "" // Style for disabled state
+        }`}
       >
         <span
           className={`${

@@ -27,6 +27,7 @@ export default function BookDetail({ book }: BookDetailProps) {
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
+  const [showReviewForm, setShowReviewForm] = useState(false); // State to control ReviewForm visibility
 
   const currentShelf = getBookCurrentShelf(book.id);
 
@@ -76,6 +77,7 @@ export default function BookDetail({ book }: BookDetailProps) {
 
   const handleReviewChange = () => {
     fetchReviews();
+    setShowReviewForm(false); // Hide form after submission/cancellation
   };
 
   return (
@@ -200,46 +202,43 @@ export default function BookDetail({ book }: BookDetailProps) {
         {/* Tab content */}
         <div className="py-4">
           {activeTab === "details" && (
-            <div>
-              {book.genres && book.genres.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                    Genres
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {book.genres.map((genre, index) => (
-                      <Badge key={index} variant="secondary">
-                        {genre}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
+            <div className="space-y-4">
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  About this Book
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
+                  Description
                 </h3>
                 <p className="text-gray-700 dark:text-gray-300">
-                  This book is available on OpenLibrary with ID: {book.id}
+                  {book.description || "No description available."}
                 </p>
               </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
+                  ISBN
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300">
+                  {book.isbn || "Not available"}
+                </p>
+              </div>
+              {/* Add more details as needed */}
             </div>
           )}
 
           {activeTab === "reviews" && (
-            <>
-              {session?.user && (
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            <div className="space-y-6">
+              {session?.user && !showReviewForm && (
+                <div className="flex justify-end">
+                  <Button onClick={() => setShowReviewForm(true)}>
                     Write a Review
-                  </h3>
-                  <ReviewForm
-                    bookId={book.id}
-                    userId={session.user.id}
-                    onReviewSubmitted={handleReviewChange}
-                  />
+                  </Button>
                 </div>
+              )}
+              {showReviewForm && session?.user?.id && (
+                <ReviewForm
+                  bookId={book.id}
+                  userId={session.user.id} // Pass userId from session
+                  onSubmitSuccess={handleReviewChange}
+                  onCancel={() => setShowReviewForm(false)}
+                />
               )}
               {isLoadingReviews && <p>Loading reviews...</p>}
               {reviewsError && (
@@ -253,12 +252,13 @@ export default function BookDetail({ book }: BookDetailProps) {
               )}
               {!isLoadingReviews && !reviewsError && (
                 <ReviewList
+                  bookId={book.id}
                   reviews={reviews}
-                  currentUserId={session?.user?.id}
-                  onReviewChange={handleReviewChange}
+                  onReviewChange={handleReviewChange} // Pass the callback
+                  currentUserId={session?.user?.id} // Pass currentUserId
                 />
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -3,6 +3,7 @@ import React, { forwardRef } from "react";
 interface TextFieldProps {
   id: string;
   label?: string;
+  name?: string; // Added name prop
   type?: "text" | "email" | "password" | "number" | "url";
   placeholder?: string;
   value: string;
@@ -18,6 +19,7 @@ const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
     {
       id,
       label,
+      name, // Added name prop
       type = "text",
       placeholder,
       value,
@@ -43,6 +45,7 @@ const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
         <input
           ref={ref}
           id={id}
+          name={name} // Passed name prop to input
           type={type}
           value={value}
           onChange={onChange}

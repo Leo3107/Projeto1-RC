@@ -101,7 +101,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </Link>
                 )}
                 <Button
-                  onClick={() => signOut({ callbackUrl: '/' })}
+                  onClick={() => signOut({ callbackUrl: "/" })}
                   variant="ghost"
                   size="sm"
                   className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -113,7 +113,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div className="flex items-center space-x-2">
                 <Button
                   onClick={() => signIn()}
-                  variant="ghost" 
+                  variant="ghost"
                   size="sm"
                   className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700"
                 >
@@ -121,7 +121,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Button>
                 <Link href="/auth/signup" passHref>
                   <Button
-                    as="a" 
+                    as="a"
                     variant="primary"
                     color="primary"
                     size="sm"
@@ -136,15 +136,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-grow container mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
 
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
           &copy; {new Date().getFullYear()} BookShelf. All rights reserved.
           <p className="mt-1">
-            Powered by Next.js, Tailwind CSS, and data from{' '}
+            Powered by Next.js, Tailwind CSS, and data from{" "}
             <a
               href="https://openlibrary.org/"
               target="_blank"

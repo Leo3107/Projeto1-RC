@@ -18,6 +18,8 @@ export interface Book {
   year?: number;
   genres?: string[];
   coverUrl?: string;
+  description?: string; // Added description
+  isbn?: string; // Added ISBN
 }
 
 export interface Review {

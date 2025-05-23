@@ -52,7 +52,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
       >
         <StoreInitializer />
-        <AuthProvider> {/* Wrapped children with AuthProvider */}
+        <AuthProvider>
+          {" "}
+          {/* Wrapped children with AuthProvider */}
           {children}
         </AuthProvider>
       </body>

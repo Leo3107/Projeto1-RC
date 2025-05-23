@@ -5,7 +5,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
   const genre = searchParams.get("genre") || undefined;
-  const year = searchParams.get("year") ? Number(searchParams.get("year")) : undefined;
+  const year = searchParams.get("year")
+    ? Number(searchParams.get("year"))
+    : undefined;
   const id = searchParams.get("id");
 
   if (id) {
@@ -15,11 +17,17 @@ export async function GET(request: NextRequest) {
       if (book) {
         return NextResponse.json(book);
       } else {
-        return NextResponse.json({ message: "Book not found" }, { status: 404 });
+        return NextResponse.json(
+          { message: "Book not found" },
+          { status: 404 }
+        );
       }
     } catch (error) {
       console.error(`Error fetching book with id ${id}:`, error);
-      return NextResponse.json({ message: "Error fetching book data" }, { status: 500 });
+      return NextResponse.json(
+        { message: "Error fetching book data" },
+        { status: 500 }
+      );
     }
   }
 
@@ -30,9 +38,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(books);
     } catch (error) {
       console.error(`Error searching books with query "${query}":`, error);
-      return NextResponse.json({ message: "Error searching books" }, { status: 500 });
+      return NextResponse.json(
+        { message: "Error searching books" },
+        { status: 500 }
+      );
     }
   }
 
-  return NextResponse.json({ message: "Missing query or id parameter" }, { status: 400 });
+  return NextResponse.json(
+    { message: "Missing query or id parameter" },
+    { status: 400 }
+  );
 }

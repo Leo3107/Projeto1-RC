@@ -1,10 +1,14 @@
-import NextAuth from "next-auth";
+import NextAuth, { AuthOptions, SessionStrategy } from "next-auth";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 
-export const authOptions = {
+console.log("Prisma client in /api/auth/[...nextauth]:", typeof prisma, prisma ? Object.keys(prisma) : "Prisma is null/undefined");
+console.log("DATABASE_URL available in /api/auth/[...nextauth]:", !!process.env.DATABASE_URL);
+console.log("NEXTAUTH_SECRET starts with in /api/auth/[...nextauth]:", process.env.NEXTAUTH_SECRET?.substring(0, 5));
+
+export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -13,7 +17,7 @@ export const authOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials: Record<string, string> | undefined) {
         if (!credentials?.email || !credentials.password) {
           return null;
         }
@@ -22,34 +26,40 @@ export const authOptions = {
           where: { email: credentials.email },
         });
 
-        if (user && bcrypt.compareSync(credentials.password, user.password!)) {
-          return { id: user.id, name: user.name, email: user.email, image: user.image };
+        // Use user.passwordHash and user.avatar as per schema
+        if (user && user.passwordHash && bcrypt.compareSync(credentials.password, user.passwordHash)) {
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            image: user.avatar, // Changed from user.image to user.avatar
+          };
         }
         return null;
       },
     }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as SessionStrategy, // Explicitly cast to SessionStrategy
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user?: any }) { // Using any for now to avoid compile errors
       if (user) {
         token.id = user.id;
       }
       return token;
     },
-    async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id;
+    async session({ session, token }: { session: any; token: any }) { // Using any for now
+      if (session.user && token.id) {
+        session.user.id = token.id;
       }
       return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
-    signIn: '/auth/signin', // Default sign-in page
-  }
+    signIn: "/auth/signin",
+  },
 };
 
 const handler = NextAuth(authOptions);
